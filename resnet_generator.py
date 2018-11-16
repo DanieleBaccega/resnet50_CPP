@@ -63,14 +63,6 @@ from mxnet.gluon import HybridBlock
 from mxnet.gluon import nn
 from mxnet import base
 
-#from ....context import cpu
-
-#from ...block import HybridBlock
-
-#from ... import nn
-
-#from .... import base
-
 
 
 # Helpers
@@ -1085,6 +1077,7 @@ def resnet152_v2(**kwargs):
 def main():
     net = resnet50_v2()
     sym_json = net(mx.sym.var('data')).tojson()
+
     with open("resnet50.json", "w") as text_file:
         text_file.write("{0}".format(sym_json))
 

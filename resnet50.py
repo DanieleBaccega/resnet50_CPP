@@ -171,8 +171,7 @@ def get_symbol(num_classes, num_layers, image_shape, conv_workspace=256, dtype='
 		  dtype = dtype)
 
 def main():
-	net = get_symbol(10, 50, "1, 28, 28")
-	net.save("resnet.json")
+    net = get_symbol(10, 50, "3, 32, 32")
 
 if __name__ == '__main__':
-	main()
+    main()

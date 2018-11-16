@@ -133,9 +133,6 @@ Symbol resnet(vector<int> units,
   height = image_shape[1];
   width = image_shape[2];
 
-  /*if(dtype == "float32"){
-    data = Symbol::Variable("id");
-  }*/
   data = BatchNorm("bn_data", data, gamma, beta, mmean, mvar, 2e-5, bn_mom, true);
   if(height <= 32){
     body = ConvolutionNoBias("conv0", data, shortcut_w, Shape(3, 3), filter_list[0], Shape(1, 1), Shape(), Shape(1, 1), 1, workspace);
@@ -242,31 +239,11 @@ Symbol get_symbol(int num_classes,
   return resnet(units, num_stages, filter_list, num_classes, image_shape, bottle_neck, 0.9, conv_workspace, dtype);
 }
 
-/*Symbol mlp(const vector<int> &layers) {
-  auto x = Symbol::Variable("X");
-  auto label = Symbol::Variable("label");
 
-  vector<Symbol> weights(layers.size());
-  vector<Symbol> biases(layers.size());
-  vector<Symbol> outputs(layers.size());
 
-  for (size_t i = 0; i < layers.size(); ++i) {
-    weights[i] = Symbol::Variable("w" + to_string(i));
-    biases[i] = Symbol::Variable("b" + to_string(i));
-    Symbol fc = FullyConnected(
-      i == 0? x : outputs[i-1],  // data
-      weights[i],
-      biases[i],
-      layers[i]);
-    outputs[i] = i == layers.size()-1 ? fc : Activation(fc, ActivationActType::kRelu);
-  }
-
-  return SoftmaxOutput(outputs.back(), label);
-}*/
 
 int main(int argc, char** argv) {
   const int image_size = 32;
-  //const vector<int> layers{128, 64, 10};
   const int batch_size = 128;
   const int max_epoch = 100;
   const float learning_rate = 0.001;
@@ -310,8 +287,7 @@ int main(int argc, char** argv) {
       .SetParam("flat", 1)
       .CreateDataIter();*/
 
-  //auto net = mlp(layers);
-  //auto net = get_symbol(10, 50, {1, image_size, image_size});
+  //auto net = get_symbol(10, 50, {3, image_size, image_size});
   auto net = Symbol::Load("resnet50.json");
 
   Context ctx = Context::gpu();  // Use GPU for training
@@ -319,27 +295,27 @@ int main(int argc, char** argv) {
   std::map<string, NDArray> args;
   args["data"] = NDArray(Shape(batch_size, 1, image_size, image_size), ctx);
   args["label"] = NDArray(Shape(batch_size), ctx);
-  // Let MXNet infer shapes other parameters such as weights
+  //Let MXNet infer shapes other parameters such as weights
   net.InferArgsMap(ctx, &args, args);
 
-  // Initialize all parameters with uniform distribution U(-0.01, 0.01)
+  //Initialize all parameters with uniform distribution U(-0.01, 0.01)
   auto initializer = Uniform(0.01);
   for (auto& arg : args) {
-    // arg.first is parameter name, and arg.second is the value
+    //arg.first is parameter name, and arg.second is the value
     initializer(arg.first, &arg.second);
   }
 
-  // Create sgd optimizer
+  //Create sgd optimizer
   Optimizer* opt = OptimizerRegistry::Find("adam");
   opt->SetParam("lr", learning_rate)
      ->SetParam("wd", weight_decay);
 
-  // Create executor by binding parameters to the model
+  //Create executor by binding parameters to the model
   auto *exec = net.SimpleBind(ctx, args);
   auto arg_names = net.ListArguments();
   Accuracy train_acc;
 
-  // Start training
+  //Start training
   for (int iter = 0; iter < max_epoch; ++iter) {
     int samples = 0;
     train_iter.Reset();
@@ -349,16 +325,16 @@ int main(int argc, char** argv) {
     while (train_iter.Next()) {
       samples += batch_size;
       auto data_batch = train_iter.GetDataBatch();
-      // Set data and label
+      //Set data and label
       data_batch.data.CopyTo(&args["X"]);
       data_batch.label.CopyTo(&args["label"]);
       NDArray::WaitAll();
 
-      // Compute gradients
+      //Compute gradients
       exec->Forward(true);
       exec->Backward();
       train_acc.Update(data_batch.label, exec->outputs[0]);
-      // Update parameters
+      //Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
         if (arg_names[i] == "X" || arg_names[i] == "label") continue;
         opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
