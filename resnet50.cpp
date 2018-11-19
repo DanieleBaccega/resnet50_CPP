@@ -245,9 +245,9 @@ Symbol get_symbol(int num_classes,
 int main(int argc, char** argv) {
   const int image_size = 32;
   const int batch_size = 128;
-  const int max_epoch = 100;
+  const int max_epoch = 400;
   const float learning_rate = 0.001;
-  const float weight_decay = 1e-4;
+  const float weight_decay = 0.0005;
 
 
   auto train_iter = MXDataIter("ImageRecordIter")
@@ -288,7 +288,7 @@ int main(int argc, char** argv) {
       .CreateDataIter();*/
 
   //auto net = get_symbol(10, 50, {3, image_size, image_size});
-  auto net = Symbol::Load("resnet50.json");
+  auto net = Symbol::Load("resnet50v2.json");
 
   Context ctx = Context::gpu();  // Use GPU for training
 
@@ -326,7 +326,7 @@ int main(int argc, char** argv) {
       samples += batch_size;
       auto data_batch = train_iter.GetDataBatch();
       //Set data and label
-      data_batch.data.CopyTo(&args["X"]);
+      data_batch.data.CopyTo(&args["data"]);
       data_batch.label.CopyTo(&args["label"]);
       NDArray::WaitAll();
 
@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
       train_acc.Update(data_batch.label, exec->outputs[0]);
       //Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
-        if (arg_names[i] == "X" || arg_names[i] == "label") continue;
+        if (arg_names[i] == "data" || arg_names[i] == "label") continue;
         opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
       }
     }
@@ -351,7 +351,7 @@ int main(int argc, char** argv) {
   val_iter.Reset();
   while (val_iter.Next()) {
 	auto data_batch = val_iter.GetDataBatch();
-	data_batch.data.CopyTo(&args["X"]);
+	data_batch.data.CopyTo(&args["data"]);
 	data_batch.label.CopyTo(&args["label"]);
 	// Forward pass is enough as no gradient is needed when evaluating
 	exec->Forward(false);
