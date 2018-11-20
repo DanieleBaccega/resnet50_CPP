@@ -739,7 +739,7 @@ def get_resnet(version, num_layers, pretrained=False, ctx=gpu(),
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -791,7 +791,7 @@ def resnet18_v1(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -821,7 +821,7 @@ def resnet34_v1(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -851,7 +851,7 @@ def resnet50_v1(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -881,7 +881,7 @@ def resnet101_v1(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -911,7 +911,7 @@ def resnet152_v1(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -941,7 +941,7 @@ def resnet18_v2(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -971,7 +971,7 @@ def resnet34_v2(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -1001,7 +1001,7 @@ def resnet50_v2(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -1031,7 +1031,7 @@ def resnet101_v2(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -1061,7 +1061,7 @@ def resnet152_v2(**kwargs):
 
         Whether to load the pretrained weights for model.
 
-    ctx : Context, default CPU
+    ctx : Context, default GPU
 
         The context in which to load the pretrained weights.
 
@@ -1075,10 +1075,10 @@ def resnet152_v2(**kwargs):
 
 
 def main():
-    net = resnet50_v1()
+    net = resnet50_v2()
     sym_json = net(mx.sym.var('data')).tojson()
 
-    with open("resnet50v1.json", "w") as text_file:
+    with open("resnet50v2.json", "w") as text_file:
         text_file.write("{0}".format(sym_json))
 
 if __name__ == '__main__':

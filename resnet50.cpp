@@ -243,14 +243,15 @@ Symbol get_symbol(int num_classes,
 
 
 int main(int argc, char** argv) {
-  const int image_size = 32;
+  const int image_size = 28;
+  const int channels = 1;
   const int batch_size = 128;
   const int max_epoch = 400;
   const float learning_rate = 0.001;
   const float weight_decay = 0.0005;
 
 
-  auto train_iter = MXDataIter("ImageRecordIter")
+  /*auto train_iter = MXDataIter("ImageRecordIter")
 	.SetParam("path_imglist", "./cifar10/cifar10_train.lst")
         .SetParam("path_imgrec", "./cifar10/cifar10_train.rec")
         .SetParam("rand_crop", 1)
@@ -272,20 +273,20 @@ int main(int argc, char** argv) {
         .SetParam("round_batch", 0)
 	.SetParam("preprocess_threads", 1)
 	.SetParam("pad", 2)
-        .CreateDataIter();
+        .CreateDataIter();*/
 
-  /*auto train_iter = MXDataIter("MNISTIter")
+  auto train_iter = MXDataIter("MNISTIter")
       .SetParam("image", "../data/mnist_data/train-images-idx3-ubyte")
       .SetParam("label", "../data/mnist_data/train-labels-idx1-ubyte")
       .SetParam("batch_size", batch_size)
-      .SetParam("flat", 1)
+      //.SetParam("flat", 1)
       .CreateDataIter();
   auto val_iter = MXDataIter("MNISTIter")
       .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
       .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
       .SetParam("batch_size", batch_size)
-      .SetParam("flat", 1)
-      .CreateDataIter();*/
+      //.SetParam("flat", 1)
+      .CreateDataIter();
 
   //auto net = get_symbol(10, 50, {3, image_size, image_size});
   auto net = Symbol::Load("resnet50v2.json");
@@ -293,7 +294,7 @@ int main(int argc, char** argv) {
   Context ctx = Context::gpu();  // Use GPU for training
 
   std::map<string, NDArray> args;
-  args["data"] = NDArray(Shape(batch_size, 1, image_size, image_size), ctx);
+  args["data"] = NDArray(Shape(batch_size, channels, image_size, image_size), ctx);
   args["label"] = NDArray(Shape(batch_size), ctx);
   //Let MXNet infer shapes other parameters such as weights
   net.InferArgsMap(ctx, &args, args);
