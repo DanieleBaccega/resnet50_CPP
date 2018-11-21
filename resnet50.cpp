@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
         .SetParam("path_imgrec", "./cifar10/cifar10_train.rec")
         .SetParam("rand_crop", 1)
         .SetParam("rand_mirror", 1)
-        .SetParam("data_shape", Shape(3, 28, 28))
+        .SetParam("data_shape", Shape(3, 32, 32))
         .SetParam("batch_size", batch_size)
         .SetParam("shuffle", 1)
         .SetParam("preprocess_threads", 1)
@@ -268,7 +268,7 @@ int main(int argc, char** argv) {
 	.SetParam("path_imgrec", "./cifar10/cifar10_val.rec")
         .SetParam("rand_crop", 0)
         .SetParam("rand_mirror", 0)
-        .SetParam("data_shape", Shape(3, 28, 28))
+        .SetParam("data_shape", Shape(3, 32, 32))
         .SetParam("batch_size", batch_size)
         .SetParam("round_batch", 0)
 	.SetParam("preprocess_threads", 1)
@@ -281,6 +281,7 @@ int main(int argc, char** argv) {
       .SetParam("batch_size", batch_size)
       //.SetParam("flat", 1)
       .CreateDataIter();
+
   auto val_iter = MXDataIter("MNISTIter")
       .SetParam("image", "../data/mnist_data/t10k-images-idx3-ubyte")
       .SetParam("label", "../data/mnist_data/t10k-labels-idx1-ubyte")
@@ -288,7 +289,7 @@ int main(int argc, char** argv) {
       //.SetParam("flat", 1)
       .CreateDataIter();
 
-  //auto net = get_symbol(10, 50, {3, image_size, image_size});
+  //auto net = get_symbol(10, 50, {channels, image_size, image_size});
   auto net = Symbol::Load("resnet50v2.json");
 
   Context ctx = Context::gpu();  // Use GPU for training

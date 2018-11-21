@@ -2,4 +2,3 @@ include/
 cifar10/
 old/
 mxnet_build/
-test/
