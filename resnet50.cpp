@@ -49,30 +49,30 @@ Symbol mlp(const vector<int> &layers) {
 }
 
 int main(int argc, char** argv) {
-  const int image_size = 28;
+  const int image_size = 32;
   const vector<int> layers{128, 64, 10};
   const int batch_size = 128;
   const int max_epoch = 10;
   const float learning_rate = 0.001;
   const float weight_decay = 1e-4;
 
-  auto train_iter = MXDataIter("MNISTIter")
-      .SetParam("image", "./mnist_data/train-images-idx3-ubyte")
-      .SetParam("label", "./mnist_data/train-labels-idx1-ubyte")
-      .SetParam("batch_size", batch_size)
-      // .SetParam("flat", 1)
-      .CreateDataIter();
-  auto val_iter = MXDataIter("MNISTIter")
-      .SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
-      .SetParam("label", "./mnist_data/t10k-labels-idx1-ubyte")
-      .SetParam("batch_size", batch_size)
-      // .SetParam("flat", 1)
-      .CreateDataIter();
+  // auto train_iter = MXDataIter("MNISTIter")
+  //     .SetParam("image", "./mnist_data/train-images-idx3-ubyte")
+  //     .SetParam("label", "./mnist_data/train-labels-idx1-ubyte")
+  //     .SetParam("batch_size", batch_size)
+  //     // .SetParam("flat", 1)
+  //     .CreateDataIter();
+  // auto val_iter = MXDataIter("MNISTIter")
+  //     .SetParam("image", "../mnist_data/t10k-images-idx3-ubyte")
+  //     .SetParam("label", "./mnist_data/t10k-labels-idx1-ubyte")
+  //     .SetParam("batch_size", batch_size)
+  //     // .SetParam("flat", 1)
+  //     .CreateDataIter();
 
-  /*auto train_iter = MXDataIter("ImageRecordIter")
+  auto train_iter = MXDataIter("ImageRecordIter")
   .SetParam("path_imglist", "./cifar10/cifar10_train.lst")
         .SetParam("path_imgrec", "./cifar10/cifar10_train.rec")
-        .SetParam("rand_crop", 1)
+        .SetParam("rand_crop", 0)
         .SetParam("rand_mirror", 1)
         .SetParam("data_shape", Shape(3, 32, 32))
         .SetParam("batch_size", batch_size)
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
         .SetParam("round_batch", 0)
   .SetParam("preprocess_threads", 24)
   .SetParam("pad", 2)
-        .CreateDataIter();*/
+        .CreateDataIter();
 
 
   auto net = Symbol::Load("resnet18_v2.json");
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
   Context ctx = Context::gpu();  // Use CPU for training
 
   std::map<string, NDArray> args;
-  args["data"] = NDArray(Shape(batch_size, 1, image_size, image_size), ctx);
+  args["data"] = NDArray(Shape(batch_size, 3, image_size, image_size), ctx);
   args["label"] = NDArray(Shape(batch_size), ctx);
   // Let MXNet infer shapes other parameters such as weights
   net.InferArgsMap(ctx, &args, args);

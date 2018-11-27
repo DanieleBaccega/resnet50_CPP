@@ -1076,7 +1076,6 @@ def resnet152_v2(**kwargs):
 
 def main():
     net = resnet18_v2()
-    net = 
     sym_json = net(mx.sym.var('data')).tojson()
 
     with open("resnet18_v2.json", "w") as text_file:
