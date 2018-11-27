@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
   const vector<int> layers{128, 64, 10};
   const int batch_size = 256;
   const int max_epoch = 200;
-  const float learning_rate = 0.001;
+  const float learning_rate = 0.01;
   const float weight_decay = 1e-4;
 
   // auto train_iter = MXDataIter("MNISTIter")
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
   // Create executor by binding parameters to the model
   auto *exec = net.SimpleBind(ctx, args);
   auto arg_names = net.ListArguments();
-  Accuracy train_acc;
+  Accuracy train_acc, acc;
 
   // Start training
   for (int iter = 0; iter < max_epoch; ++iter) {
@@ -158,13 +158,23 @@ int main(int argc, char** argv) {
 
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
     LG << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get();
-    // if (iter > 50)
-    // 	opt->SetParam("lr", 0.01);
-    //     if (iter > 50)
-    // 	opt->SetParam("lr", 0.001);
+
+	acc.Reset();
+	val_iter.Reset();
+	while (val_iter.Next()) {
+		auto data_batch = val_iter.GetDataBatch();
+		data_batch.data.CopyTo(&args["data"]);
+		data_batch.label.CopyTo(&args["label"]);
+		// Forward pass is enough as no gradient is needed when evaluating
+		exec->Forward(false);
+		acc.Update(data_batch.label, exec->outputs[0]);
+	}
+	LG << "Accuracy: " << acc.Get();
+    if (iter > 50)
+    	opt->SetParam("lr", 0.001);
   }
 
-  Accuracy acc;
+  acc.Reset();
   val_iter.Reset();
   while (val_iter.Next()) {
   auto data_batch = val_iter.GetDataBatch();
