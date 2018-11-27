@@ -51,7 +51,7 @@ Symbol mlp(const vector<int> &layers) {
 int main(int argc, char** argv) {
   const int image_size = 32;
   const vector<int> layers{128, 64, 10};
-  const int batch_size = 128;
+  const int batch_size = 256;
   const int max_epoch = 10;
   const float learning_rate = 0.001;
   const float weight_decay = 1e-4;
@@ -72,13 +72,13 @@ int main(int argc, char** argv) {
   auto train_iter = MXDataIter("ImageRecordIter")
   .SetParam("path_imglist", "./cifar10/cifar10_train.lst")
         .SetParam("path_imgrec", "./cifar10/cifar10_train.rec")
-        .SetParam("rand_crop", 0)
+        .SetParam("rand_crop", 1)
         .SetParam("rand_mirror", 1)
         .SetParam("data_shape", Shape(3, 32, 32))
         .SetParam("batch_size", batch_size)
         .SetParam("shuffle", 1)
         .SetParam("preprocess_threads", 24)
-  .SetParam("pad", 2)
+  		.SetParam("pad", 2)
         .CreateDataIter();
 
   auto val_iter = MXDataIter("ImageRecordIter")
@@ -89,12 +89,12 @@ int main(int argc, char** argv) {
         .SetParam("data_shape", Shape(3, 32, 32))
         .SetParam("batch_size", batch_size)
         .SetParam("round_batch", 0)
-  .SetParam("preprocess_threads", 24)
-  .SetParam("pad", 2)
+		.SetParam("preprocess_threads", 24)
+  		.SetParam("pad", 2)
         .CreateDataIter();
 
 
-  auto net = Symbol::Load("resnet18_v2.json");
+  auto net = Symbol::Load("resnet50v2_thumbnail.json");
   Symbol label = Symbol::Variable("label");
   net = SoftmaxOutput(net, label);
   // auto net = mlp(layers);
@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
   net.InferArgsMap(ctx, &args, args);
 
   // Initialize all parameters with uniform distribution U(-0.01, 0.01)
-  auto initializer = Uniform(0.01);
+  auto initializer = Xavier();
   for (auto& arg : args) {
     // arg.first is parameter name, and arg.second is the value
     initializer(arg.first, &arg.second);

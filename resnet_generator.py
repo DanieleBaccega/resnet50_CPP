@@ -1081,5 +1081,11 @@ def main():
     with open("resnet18_v2.json", "w") as text_file:
         text_file.write("{0}".format(sym_json))
 
+    net = resnet50_v2()
+    sym_json = net(mx.sym.var('data')).tojson()
+
+    with open("resnet50_v2.json", "w") as text_file:
+        text_file.write("{0}".format(sym_json))
+
 if __name__ == '__main__':
     main()
