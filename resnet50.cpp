@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   const int image_size = 32;
   const vector<int> layers{128, 64, 10};
   const int batch_size = 256;
-  const int max_epoch = 10;
+  const int max_epoch = 200;
   const float learning_rate = 0.001;
   const float weight_decay = 1e-4;
 
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
         .CreateDataIter();
 
 
-  auto net = Symbol::Load("resnet50_v2.json");
+  auto net = Symbol::Load("resnet18_v2.json");
   Symbol label = Symbol::Variable("label");
   net = SoftmaxOutput(net, label);
   // auto net = mlp(layers);
@@ -158,6 +158,10 @@ int main(int argc, char** argv) {
 
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
     LG << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get();
+    // if (iter > 50)
+    // 	opt->SetParam("lr", 0.01);
+    //     if (iter > 50)
+    // 	opt->SetParam("lr", 0.001);
   }
 
   Accuracy acc;

@@ -489,7 +489,7 @@ class ResNetV1(HybridBlock):
 
     """
 
-    def __init__(self, block, layers, channels, classes=10, thumbnail=False, **kwargs):
+    def __init__(self, block, layers, channels, classes=10, thumbnail=True, **kwargs):
 
         super(ResNetV1, self).__init__(**kwargs)
 
@@ -599,7 +599,7 @@ class ResNetV2(HybridBlock):
 
     """
 
-    def __init__(self, block, layers, channels, classes=10, thumbnail=False, **kwargs):
+    def __init__(self, block, layers, channels, classes=10, thumbnail=True, **kwargs):
 
         super(ResNetV2, self).__init__(**kwargs)
 
@@ -1075,16 +1075,10 @@ def resnet152_v2(**kwargs):
 
 
 def main():
-    net = resnet18_v2()
-    sym_json = net(mx.sym.var('data')).tojson()
-
-    with open("resnet18_v2.json", "w") as text_file:
-        text_file.write("{0}".format(sym_json))
-
     net = resnet50_v2()
     sym_json = net(mx.sym.var('data')).tojson()
 
-    with open("resnet50_v2.json", "w") as text_file:
+    with open("resnet18_v2_thumb.json", "w") as text_file:
         text_file.write("{0}".format(sym_json))
 
 if __name__ == '__main__':
