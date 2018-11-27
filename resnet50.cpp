@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
         .CreateDataIter();
 
 
-  auto net = Symbol::Load("resnet50v2_thumbnail.json");
+  auto net = Symbol::Load("resnet50_v2.json");
   Symbol label = Symbol::Variable("label");
   net = SoftmaxOutput(net, label);
   // auto net = mlp(layers);
@@ -144,6 +144,9 @@ int main(int argc, char** argv) {
       exec->Backward();
 
       train_acc.Update(data_batch.label, exec->outputs[0]);
+
+      LG << "Epoch: " << iter << ", samples: " << samples << ". Accuracy: " << train_acc.Get();
+
       // Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
         if (arg_names[i] == "data" || arg_names[i] == "label") continue;
