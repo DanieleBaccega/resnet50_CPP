@@ -4,3 +4,4 @@ old/
 mxnet_build/
 *ubyte
 *.txt
+resnet50

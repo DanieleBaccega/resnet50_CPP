@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   log_file.open("log.txt");
 
   if(argc < 2){
-    LG << "Example of usage: " << argv[0] << " resnet50_v2.json";
+    LG << "Example of usage: " << argv[0] << " ./json_nets/resnet50_v2.json";
     exit(0);
   }
 

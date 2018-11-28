@@ -1077,7 +1077,7 @@ def main():
     net = resnet50_v2()
     sym_json = net(mx.sym.var('data')).tojson()
 
-    with open("resnet50_v2_thumb_test.json", "w") as text_file:
+    with open("./json_nets/resnet50_v2_thumb.json", "w") as text_file:
         text_file.write("{0}".format(sym_json))
 
 if __name__ == '__main__':
