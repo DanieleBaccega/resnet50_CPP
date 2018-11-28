@@ -4,8 +4,7 @@ LIBS = -L/opt/incubator-mxnet/lib -lmxnet
 
 
 resnet50: resnet50.cpp
-	g++ -o resnet --std=c++11 resnet50.cpp $(INCLUDES) $(LIBS)
-
+	g++ -o resnet50 --std=c++11 resnet50.cpp $(INCLUDES) $(LIBS)
 
 cleanall:
 	rm -f resnet50

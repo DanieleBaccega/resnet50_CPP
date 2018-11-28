@@ -21,12 +21,13 @@
  * Xin Li yakumolx@gmail.com
  */
 #include <chrono>
+#include <fstream>
 #include "mxnet-cpp/MxNetCpp.h"
 
 using namespace std;
 using namespace mxnet::cpp;
 
-Symbol mlp(const vector<int> &layers) {
+/*Symbol mlp(const vector<int> &layers) {
   auto x = Symbol::Variable("data");
   auto label = Symbol::Variable("label");
 
@@ -46,15 +47,22 @@ Symbol mlp(const vector<int> &layers) {
   }
 
   return SoftmaxOutput(outputs.back(), label);
-}
+}*/
 
 int main(int argc, char** argv) {
   const int image_size = 32;
-  const vector<int> layers{128, 64, 10};
+  //const vector<int> layers{128, 64, 10};
   const int batch_size = 256;
   const int max_epoch = 200;
   const float learning_rate = 0.01;
   const float weight_decay = 1e-4;
+  ofstream log_file;
+  log_file.open("log.txt");
+
+  if(argc < 2){
+    LG << "Example of usage: " << argv[0] << " resnet50_v2.json";
+    exit(0);
+  }
 
   // auto train_iter = MXDataIter("MNISTIter")
   //     .SetParam("image", "./mnist_data/train-images-idx3-ubyte")
@@ -70,7 +78,7 @@ int main(int argc, char** argv) {
   //     .CreateDataIter();
 
   auto train_iter = MXDataIter("ImageRecordIter")
-  .SetParam("path_imglist", "./cifar10/cifar10_train.lst")
+  	.SetParam("path_imglist", "./cifar10/cifar10_train.lst")
         .SetParam("path_imgrec", "./cifar10/cifar10_train.rec")
         .SetParam("rand_crop", 1)
         .SetParam("rand_mirror", 1)
@@ -78,26 +86,28 @@ int main(int argc, char** argv) {
         .SetParam("batch_size", batch_size)
         .SetParam("shuffle", 1)
         .SetParam("preprocess_threads", 24)
-  		.SetParam("pad", 2)
+	.SetParam("pad", 2)
         .CreateDataIter();
 
   auto val_iter = MXDataIter("ImageRecordIter")
-  .SetParam("path_imglist", "./cifar10/cifar10_val.lst")
-  .SetParam("path_imgrec", "./cifar10/cifar10_val.rec")
+  	.SetParam("path_imglist", "./cifar10/cifar10_val.lst")
+  	.SetParam("path_imgrec", "./cifar10/cifar10_val.rec")
         .SetParam("rand_crop", 0)
         .SetParam("rand_mirror", 0)
         .SetParam("data_shape", Shape(3, 32, 32))
         .SetParam("batch_size", batch_size)
         .SetParam("round_batch", 0)
-		.SetParam("preprocess_threads", 24)
-  		.SetParam("pad", 2)
+	.SetParam("preprocess_threads", 24)
+	.SetParam("pad", 2)
         .CreateDataIter();
 
+  //auto net = mlp(layers);
 
-  auto net = Symbol::Load("resnet18_v2.json");
+  //auto net = Symbol::Load("resnet18_v2_thumb.json");
+  auto net = Symbol::Load(argv[1]);
+
   Symbol label = Symbol::Variable("label");
   net = SoftmaxOutput(net, label);
-  // auto net = mlp(layers);
 
   Context ctx = Context::gpu();  // Use CPU for training
 
@@ -123,6 +133,7 @@ int main(int argc, char** argv) {
   auto *exec = net.SimpleBind(ctx, args);
   auto arg_names = net.ListArguments();
   Accuracy train_acc, acc;
+  float total_time = 0.0;
 
   // Start training
   for (int iter = 0; iter < max_epoch; ++iter) {
@@ -150,42 +161,51 @@ int main(int argc, char** argv) {
       // Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
         if (arg_names[i] == "data" || arg_names[i] == "label") continue;
-        opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
+          opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
       }
     }
     auto toc = chrono::system_clock::now();
 
 
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
-    LG << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get();
+    total_time += duration;
+    LG << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get() << " Time: " << total_time;
+    log_file << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get() << " Time: " << total_time << endl;
 
-	acc.Reset();
-	val_iter.Reset();
-	while (val_iter.Next()) {
-		auto data_batch = val_iter.GetDataBatch();
-		data_batch.data.CopyTo(&args["data"]);
-		data_batch.label.CopyTo(&args["label"]);
-		// Forward pass is enough as no gradient is needed when evaluating
-		exec->Forward(false);
-		acc.Update(data_batch.label, exec->outputs[0]);
-	}
-	LG << "Accuracy: " << acc.Get();
+    acc.Reset();
+    val_iter.Reset();
+    while (val_iter.Next()) {
+      auto data_batch = val_iter.GetDataBatch();
+      data_batch.data.CopyTo(&args["data"]);
+      data_batch.label.CopyTo(&args["label"]);
+      // Forward pass is enough as no gradient is needed when evaluating
+      exec->Forward(false);
+      acc.Update(data_batch.label, exec->outputs[0]);
+    }
+    
+    LG << "Accuracy: " << acc.Get();
+    log_file << "Accuracy: " << acc.Get() << endl;
+
     if (iter > 50)
     	opt->SetParam("lr", 0.001);
+    log_file.flush();
   }
 
   acc.Reset();
   val_iter.Reset();
   while (val_iter.Next()) {
-  auto data_batch = val_iter.GetDataBatch();
-  data_batch.data.CopyTo(&args["data"]);
-  data_batch.label.CopyTo(&args["label"]);
-  // Forward pass is enough as no gradient is needed when evaluating
-  exec->Forward(false);
-  acc.Update(data_batch.label, exec->outputs[0]);
+    auto data_batch = val_iter.GetDataBatch();
+    data_batch.data.CopyTo(&args["data"]);
+    data_batch.label.CopyTo(&args["label"]);
+    // Forward pass is enough as no gradient is needed when evaluating
+    exec->Forward(false);
+    acc.Update(data_batch.label, exec->outputs[0]);
   }
-  LG << "Accuracy: " << acc.Get();
 
+  LG << "Accuracy: " << acc.Get();
+  log_file << "Accuracy: " << acc.Get() << endl;
+
+  log_file.close();
   delete exec;
   MXNotifyShutdown();
   return 0;

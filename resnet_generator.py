@@ -652,7 +652,6 @@ class ResNetV2(HybridBlock):
             self.output = nn.Dense(classes, in_units=in_channels)
 
 
-
     def _make_layer(self, block, layers, channels, stride, stage_index, in_channels=0):
 
         layer = nn.HybridSequential(prefix='stage%d_'%stage_index)
@@ -1078,7 +1077,7 @@ def main():
     net = resnet50_v2()
     sym_json = net(mx.sym.var('data')).tojson()
 
-    with open("resnet18_v2_thumb.json", "w") as text_file:
+    with open("resnet50_v2_thumb_test.json", "w") as text_file:
         text_file.write("{0}".format(sym_json))
 
 if __name__ == '__main__':
