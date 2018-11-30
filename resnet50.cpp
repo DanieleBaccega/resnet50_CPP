@@ -56,9 +56,8 @@ int main(int argc, char** argv) {
   const int max_epoch = 200;
   const float learning_rate = 0.01;
   const float weight_decay = 1e-4;
-  ofstream log_file;
-  log_file.open("log.txt");
-
+  ofstream log_file("log_resnet50v2_thumb.csv");
+  
   if(argc < 2){
     LG << "Example of usage: " << argv[0] << " ./json_nets/resnet50_v2.json";
     exit(0);
@@ -104,6 +103,7 @@ int main(int argc, char** argv) {
   //auto net = mlp(layers);
 
   //auto net = Symbol::Load("resnet18_v2_thumb.json");
+  //auto net = Symbol::Load("resnet50_v2_thumb.json");
   auto net = Symbol::Load(argv[1]);
 
   Symbol label = Symbol::Variable("label");
@@ -114,28 +114,30 @@ int main(int argc, char** argv) {
   std::map<string, NDArray> args;
   args["data"] = NDArray(Shape(batch_size, 3, image_size, image_size), ctx);
   args["label"] = NDArray(Shape(batch_size), ctx);
-  // Let MXNet infer shapes other parameters such as weights
+  //Let MXNet infer shapes other parameters such as weights
   net.InferArgsMap(ctx, &args, args);
 
-  // Initialize all parameters with uniform distribution U(-0.01, 0.01)
+  //Initialize all parameters with uniform distribution U(-0.01, 0.01)
   auto initializer = Xavier();
   for (auto& arg : args) {
-    // arg.first is parameter name, and arg.second is the value
+    //arg.first is parameter name, and arg.second is the value
     initializer(arg.first, &arg.second);
   }
 
-  // Create sgd optimizer
+  //Create adam optimizer
   Optimizer* opt = OptimizerRegistry::Find("adam");
   opt->SetParam("lr", learning_rate)
      ->SetParam("wd", weight_decay);
 
-  // Create executor by binding parameters to the model
+  //Create executor by binding parameters to the model
   auto *exec = net.SimpleBind(ctx, args);
   auto arg_names = net.ListArguments();
   Accuracy train_acc, acc;
   float total_time = 0.0;
 
-  // Start training
+  log_file << "Epoch\tTime\tTraining accuracy\tTest accuracy" << endl;
+
+  //Start training
   for (int iter = 0; iter < max_epoch; ++iter) {
     int samples = 0;
     train_iter.Reset();
@@ -145,12 +147,12 @@ int main(int argc, char** argv) {
     while (train_iter.Next()) {
       samples += batch_size;
       auto data_batch = train_iter.GetDataBatch();
-      // Set data and label
+      //Set data and label
       data_batch.data.CopyTo(&args["data"]);
       data_batch.label.CopyTo(&args["label"]);
       NDArray::WaitAll();
 
-      // Compute gradients
+      //Compute gradients
       exec->Forward(true);
       exec->Backward();
 
@@ -158,7 +160,7 @@ int main(int argc, char** argv) {
 
       LG << "Epoch: " << iter << ", samples: " << samples << ". Accuracy: " << train_acc.Get();
 
-      // Update parameters
+      //Update parameters
       for (size_t i = 0; i < arg_names.size(); ++i) {
         if (arg_names[i] == "data" || arg_names[i] == "label") continue;
           opt->Update(i, exec->arg_arrays[i], exec->grad_arrays[i]);
@@ -166,11 +168,9 @@ int main(int argc, char** argv) {
     }
     auto toc = chrono::system_clock::now();
 
-
     float duration = chrono::duration_cast<chrono::milliseconds>(toc - tic).count() / 1000.0;
     total_time += duration;
     LG << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get() << " Time: " << total_time;
-    log_file << "Epoch: " << iter << " " << samples/duration << " samples/sec Training accuracy: " << train_acc.Get() << " Time: " << total_time << endl;
 
     acc.Reset();
     val_iter.Reset();
@@ -178,16 +178,17 @@ int main(int argc, char** argv) {
       auto data_batch = val_iter.GetDataBatch();
       data_batch.data.CopyTo(&args["data"]);
       data_batch.label.CopyTo(&args["label"]);
-      // Forward pass is enough as no gradient is needed when evaluating
+      //Forward pass is enough as no gradient is needed when evaluating
       exec->Forward(false);
       acc.Update(data_batch.label, exec->outputs[0]);
     }
     
     LG << "Accuracy: " << acc.Get();
-    log_file << "Accuracy: " << acc.Get() << endl;
 
     if (iter > 50)
     	opt->SetParam("lr", 0.001);
+
+    log_file << iter << "\t" << total_time << "\t" << train_acc.Get() << "\t\t" << acc.Get() << endl;
     log_file.flush();
   }
 
@@ -197,13 +198,12 @@ int main(int argc, char** argv) {
     auto data_batch = val_iter.GetDataBatch();
     data_batch.data.CopyTo(&args["data"]);
     data_batch.label.CopyTo(&args["label"]);
-    // Forward pass is enough as no gradient is needed when evaluating
+    //Forward pass is enough as no gradient is needed when evaluating
     exec->Forward(false);
     acc.Update(data_batch.label, exec->outputs[0]);
   }
 
   LG << "Accuracy: " << acc.Get();
-  log_file << "Accuracy: " << acc.Get() << endl;
 
   log_file.close();
   delete exec;
