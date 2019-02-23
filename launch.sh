@@ -1,5 +1,5 @@
 #!/bin/bash
-FILE=./json_nets/resnet50_v2_thumb.json
+FILE=./json_nets/resnet18_v2.json
 
 make resnet50
 

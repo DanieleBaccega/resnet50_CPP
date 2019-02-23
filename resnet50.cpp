@@ -52,11 +52,11 @@ using namespace mxnet::cpp;
 int main(int argc, char** argv) {
   const int image_size = 32;
   //const vector<int> layers{128, 64, 10};
-  const int batch_size = 256;
+  const int batch_size = 128;
   const int max_epoch = 200;
   const float learning_rate = 0.01;
   const float weight_decay = 1e-4;
-  ofstream log_file("log_resnet50v2_thumb.csv");
+  ofstream log_file("Experiment/log_resnet18v2_128.csv");
   
   if(argc < 2){
     LG << "Example of usage: " << argv[0] << " ./json_nets/resnet50_v2.json";
